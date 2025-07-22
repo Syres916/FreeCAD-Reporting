@@ -12,13 +12,13 @@ from sql import freecad_sql_parser
 from sql.sql_parser import SqlStatementValidationError
 from sql.sql_grammar import ParseError
 
-from PySide2.QtWidgets import QTableWidgetItem
-from PySide2.QtWidgets import QPlainTextEdit
-from PySide2.QtWidgets import QGroupBox
-from PySide2.QtWidgets import QLineEdit
-from PySide2.QtWidgets import QFormLayout
-from PySide2.QtWidgets import QPushButton
-from PySide2.QtWidgets import QCheckBox
+from PySide.QtWidgets import QTableWidgetItem
+from PySide.QtWidgets import QPlainTextEdit
+from PySide.QtWidgets import QGroupBox
+from PySide.QtWidgets import QLineEdit
+from PySide.QtWidgets import QFormLayout
+from PySide.QtWidgets import QPushButton
+from PySide.QtWidgets import QCheckBox
 
 SQL_PARSER = freecad_sql_parser.newParser()
 
@@ -29,26 +29,30 @@ def statementsToDict(reportStatements):
     statements = []
 
     for reportStatement in reportStatements:
-        statements.append({
-            'header': reportStatement.header,
-            'plainTextStatement': reportStatement.plainTextStatement,
-            'skipRowsAfter': reportStatement.skipRowsAfter,
-            'skipColumnNames': reportStatement.skipColumnNames,
-            'printResultInBold': reportStatement.printResultInBold
-        })
+        statements.append(
+            {
+                "header": reportStatement.header,
+                "plainTextStatement": reportStatement.plainTextStatement,
+                "skipRowsAfter": reportStatement.skipRowsAfter,
+                "skipColumnNames": reportStatement.skipColumnNames,
+                "printResultInBold": reportStatement.printResultInBold,
+            }
+        )
 
-    return {
-        'statements': statements
-    }
+    return {"statements": statements}
 
 
 def dictToStatements(statementDict):
     reportStatements = []
 
-    for statement in statementDict['statements']:
-        reportStatement = ReportStatement(statement['header'],
-                                          statement['plainTextStatement'], statement['skipRowsAfter'],
-                                          statement['skipColumnNames'], statement['printResultInBold'])
+    for statement in statementDict["statements"]:
+        reportStatement = ReportStatement(
+            statement["header"],
+            statement["plainTextStatement"],
+            statement["skipRowsAfter"],
+            statement["skipColumnNames"],
+            statement["printResultInBold"],
+        )
 
         reportStatements.append(reportStatement)
 
@@ -72,11 +76,11 @@ def lineRange(startColumn, endColumn, lineNumber):
 
 
 def cellRange(startColumn, startLine, endColumn, endLine):
-    return '%s%s:%s%s' % (startColumn, startLine, endColumn, endLine)
+    return "%s%s:%s%s" % (startColumn, startLine, endColumn, endLine)
 
 
 def buildCellName(columnName, lineNumber):
-    return '%s%s' % (columnName, lineNumber)
+    return "%s%s" % (columnName, lineNumber)
 
 
 def literalText(text):
@@ -95,22 +99,21 @@ class ReportSpreadsheet(object):
     def printHeader(self, header, numberOfColumns):
         spreadsheet = self.spreadsheet
 
-        if header is None or header == '':
+        if header is None or header == "":
             return
 
-        headerCell = 'A%s' % (self.lineNumber)
+        headerCell = "A%s" % (self.lineNumber)
 
         self.setCellValue(headerCell, header)
-        spreadsheet.setStyle(headerCell, 'bold|underline', 'add')
+        spreadsheet.setStyle(headerCell, "bold|underline", "add")
 
         if numberOfColumns > 1:
             lastColumnCell = COLUMN_NAMES[numberOfColumns - 1]
 
-            spreadsheet.mergeCells(
-                lineRange('A', lastColumnCell, self.lineNumber))
+            spreadsheet.mergeCells(lineRange("A", lastColumnCell, self.lineNumber))
 
         self.lineNumber += 1
-        self.updateMaxColumn('A')
+        self.updateMaxColumn("A")
 
         self.clearLine(self.lineNumber)
 
@@ -125,8 +128,7 @@ class ReportSpreadsheet(object):
 
             self.setCellValue(cellName, columnLabel)
 
-        spreadsheet.setStyle(
-            lineRange('A', columnName, self.lineNumber), 'bold', 'add')
+        spreadsheet.setStyle(lineRange("A", columnName, self.lineNumber), "bold", "add")
 
         self.lineNumber += 1
         self.updateMaxColumn(columnName)
@@ -136,7 +138,7 @@ class ReportSpreadsheet(object):
     def printRows(self, rows, skipRowsAfter=False, printResultInBold=False):
         lineNumberBefore = self.lineNumber
 
-        columnName = 'A'
+        columnName = "A"
 
         for row in rows:
             columnName = None
@@ -151,7 +153,10 @@ class ReportSpreadsheet(object):
 
         if printResultInBold:
             self.spreadsheet.setStyle(
-                cellRange('A', lineNumberBefore, columnName, self.lineNumber), 'bold', 'add')
+                cellRange("A", lineNumberBefore, columnName, self.lineNumber),
+                "bold",
+                "add",
+            )
 
         self.clearLine(self.lineNumber)
 
@@ -165,7 +170,7 @@ class ReportSpreadsheet(object):
 
     def setCellValue(self, cell, value):
         if value is None:
-            convertedValue = ''
+            convertedValue = ""
         elif isinstance(value, Units.Quantity):
             convertedValue = value.UserString
         else:
@@ -173,8 +178,7 @@ class ReportSpreadsheet(object):
 
         convertedValue = literalText(convertedValue)
 
-        logger.debug('set %s to %s for %s',
-                     (cell, convertedValue, self.spreadsheet))
+        logger.debug("set %s to %s for %s", (cell, convertedValue, self.spreadsheet))
 
         self.spreadsheet.set(cell, convertedValue)
 
@@ -205,7 +209,7 @@ class ReportSpreadsheet(object):
                     self.clearColumn(COLUMN_NAMES[columnIndexToDelete], line)
 
     def clearLine(self, lineNumberToDelete):
-        logger.debug('Clear line %s', (lineNumberToDelete))
+        logger.debug("Clear line %s", (lineNumberToDelete))
 
         column = None
 
@@ -213,34 +217,46 @@ class ReportSpreadsheet(object):
             column = nextColumnName(column)
             cellName = buildCellName(column, lineNumberToDelete)
 
-            logger.debug('    Clear cell %s', (cellName))
+            logger.debug("    Clear cell %s", (cellName))
 
             self.spreadsheet.clear(cellName)
 
     def clearColumn(self, columnToDelete, maxLineNumber):
-        logger.debug('Clear column %s', (columnToDelete))
+        logger.debug("Clear column %s", (columnToDelete))
 
         for lineNumber in range(1, maxLineNumber):
             cellName = buildCellName(columnToDelete, lineNumber + 1)
 
-            logger.debug('    Clear cell %s', (cellName))
+            logger.debug("    Clear cell %s", (cellName))
 
             self.spreadsheet.clear(cellName)
 
 
 class ReportEntryWidget(QGroupBox):
-    def __init__(self, header, statement, skipRowsAfter, skipColumnNames, printResultInBold, panel, index, hasError):
+    def __init__(
+        self,
+        header,
+        statement,
+        skipRowsAfter,
+        skipColumnNames,
+        printResultInBold,
+        panel,
+        index,
+        hasError,
+    ):
         super().__init__()
 
         self.panel = panel
         self.index = index
-
-        self.headerEdit = QLineEdit(header)
+        if header == False:
+            self.headerEdit = QLineEdit("")
+        else:
+            self.headerEdit = QLineEdit(header)
         self.statementEdit = QPlainTextEdit(statement)
-        self.skipRowsAfterEdit = QCheckBox('Skip Empty Rows After Statement')
-        self.skipColumnNamesEdit = QCheckBox('Skip Column Names')
-        self.printResultInBoldEdit = QCheckBox('Print Result in bold')
-        self.removeButton = QPushButton('Remove')
+        self.skipRowsAfterEdit = QCheckBox("Skip Empty Rows After Statement")
+        self.skipColumnNamesEdit = QCheckBox("Skip Column Names")
+        self.printResultInBoldEdit = QCheckBox("Print Result in bold")
+        self.removeButton = QPushButton("Remove")
 
         self.skipRowsAfterEdit.setChecked(skipRowsAfter)
         self.skipColumnNamesEdit.setChecked(skipColumnNames)
@@ -249,19 +265,19 @@ class ReportEntryWidget(QGroupBox):
         self.removeButton.clicked.connect(self.remove)
 
         if hasError:
-            self.statementEdit.setStyleSheet('background-color: #f5dbd9;')
+            self.statementEdit.setStyleSheet("background-color: #f5dbd9;")
 
         self.initUi()
 
     def initUi(self):
         self.layout = QFormLayout()
 
-        self.layout.addRow('Header', self.headerEdit)
-        self.layout.addRow('Statement', self.statementEdit)
-        self.layout.addRow(' ', self.skipColumnNamesEdit)
-        self.layout.addRow(' ', self.skipRowsAfterEdit)
-        self.layout.addRow(' ', self.printResultInBoldEdit)
-        self.layout.addRow(' ', self.removeButton)
+        self.layout.addRow("Header", self.headerEdit)
+        self.layout.addRow("Statement", self.statementEdit)
+        self.layout.addRow(" ", self.skipColumnNamesEdit)
+        self.layout.addRow(" ", self.skipRowsAfterEdit)
+        self.layout.addRow(" ", self.printResultInBoldEdit)
+        self.layout.addRow(" ", self.removeButton)
 
         self.setLayout(self.layout)
 
@@ -284,30 +300,51 @@ class ReportEntryWidget(QGroupBox):
         self.panel.removeRow(self)
 
 
-class ReportConfigPanel():
+class ReportConfigPanel:
     def __init__(self, report, freecadObject):
         self.report = report
         self.freecadObject = freecadObject
         self.entries = []
 
-        self.form = FreeCADGui.PySideUic.loadUi(uiPath('report_config.ui'))
+        self.form = FreeCADGui.PySideUic.loadUi(uiPath("report_config.ui"))
 
-        self.form.Title.setText('%s Config' % (freecadObject.Label))
+        self.form.Title.setText("%s Config" % (freecadObject.Label))
         self.scrollAreaWidget = self.form.ScrollArea.widget()
 
-        self.form.AddStatementButton.clicked.connect(
-            self.addRow)
+        self.form.AddStatementButton.clicked.connect(self.addRow)
 
         self.setupRows()
 
     def setupRows(self):
         for statement in self.report.statements:
-            self.addRow(statement.header, statement.plainTextStatement,
-                        statement.skipRowsAfter, statement.skipColumnNames, statement.printResultInBold, statement.parserError)
+            self.addRow(
+                statement.header,
+                statement.plainTextStatement,
+                statement.skipRowsAfter,
+                statement.skipColumnNames,
+                statement.printResultInBold,
+                statement.parserError,
+            )
 
-    def addRow(self, header=None, statement=None, skipRowsAfter=False, skipColumnNames=False, printResultInBold=False, hasError=False):
-        widget = ReportEntryWidget(header, statement, skipRowsAfter,
-                                   skipColumnNames, printResultInBold, self, len(self.entries), hasError)
+    def addRow(
+        self,
+        header=None,
+        statement=None,
+        skipRowsAfter=False,
+        skipColumnNames=False,
+        printResultInBold=False,
+        hasError=False,
+    ):
+        widget = ReportEntryWidget(
+            header,
+            statement,
+            skipRowsAfter,
+            skipColumnNames,
+            printResultInBold,
+            self,
+            len(self.entries),
+            hasError,
+        )
 
         self.entries.append(widget)
 
@@ -320,11 +357,18 @@ class ReportConfigPanel():
         layoutItem.widget().deleteLater()
 
     def accept(self):
-        self.saveIntoConfig()
-
-        FreeCADGui.Control.closeDialog()
-
-        self.report.execute(self.freecadObject)
+        can_continue = True
+        for entry in self.entries:
+            # print(entry.getPlainTextStatement())
+            if entry.getPlainTextStatement()[:6] != "Select":
+                FreeCAD.Console.PrintError(
+                    "Unable to continue, one of the statements does not start with the word Select (case sensitive)\n"
+                )
+                can_continue = False
+        if can_continue:
+            self.saveIntoConfig()
+            FreeCADGui.Control.closeDialog()
+            self.report.execute(self.freecadObject)
 
     def reject(self):
         FreeCADGui.Control.closeDialog()
@@ -334,13 +378,25 @@ class ReportConfigPanel():
 
         for entry in self.entries:
             reportStatement = ReportStatement(
-                entry.getHeader(), entry.getPlainTextStatement(), entry.shouldSkipRowsAfter(), entry.shouldSkipColumnNames(), entry.shouldPrintResultInBold())
+                entry.getHeader(),
+                entry.getPlainTextStatement(),
+                entry.shouldSkipRowsAfter(),
+                entry.shouldSkipColumnNames(),
+                entry.shouldPrintResultInBold(),
+            )
 
             self.report.statements.append(reportStatement)
 
 
 class ReportStatement(object):
-    def __init__(self, header, plainTextStatement, skipRowsAfter=False, skipColumnNames=False, printResultInBold=False):
+    def __init__(
+        self,
+        header,
+        plainTextStatement,
+        skipRowsAfter=False,
+        skipColumnNames=False,
+        printResultInBold=False,
+    ):
         self.header = header
         self.plainTextStatement = plainTextStatement
         self.skipRowsAfter = skipRowsAfter
@@ -355,29 +411,39 @@ class ReportStatement(object):
             self.statement = None
 
             import logging
-            logging.exception('')
 
-        logger.debug('parsed statement %s', (plainTextStatement))
-        logger.debug('to %s', (self.statement))
+            logging.exception("")
+
+        logger.debug("parsed statement %s", (plainTextStatement))
+        logger.debug("to %s", (self.statement))
 
     def execute(self):
         if self.parserError:
-            return [['The statement has some errors. Check console for further details']]
+            return [
+                ["The statement has some errors. Check console for further details"]
+            ]
 
         return self.statement.execute()
 
     def getColumnNames(self):
         if self.parserError:
-            return ['Error']
+            return ["Error"]
 
         return self.statement.getColumnNames()
 
     def serializeState(self):
-        return ['VERSION:1', self.header, self.plainTextStatement, self.skipRowsAfter, self.skipColumnNames, self.printResultInBold]
+        return [
+            "VERSION:1",
+            self.header,
+            self.plainTextStatement,
+            self.skipRowsAfter,
+            self.skipColumnNames,
+            self.printResultInBold,
+        ]
 
     @staticmethod
     def deserializeState(state):
-        if state[0] == 'VERSION:1':
+        if state[0] == "VERSION:1":
             return ReportStatement(state[1], state[2], state[3], state[4], state[5])
         else:
             stateItems = len(state)
@@ -391,7 +457,7 @@ class ReportStatement(object):
             return ReportStatement(state[0], state[1], state[3], state[4], state[5])
 
 
-class Report():
+class Report:
     def __init__(self, obj, fileObject=None):
         obj.Proxy = self
 
@@ -407,13 +473,21 @@ class Report():
     def setProperties(self, obj):
         pl = obj.PropertiesList
 
-        if not 'Result' in pl:
-            obj.addProperty("App::PropertyLink", "Result", "Settings",
-                            "The spreadsheet to print the results to")
+        if not "Result" in pl:
+            obj.addProperty(
+                "App::PropertyLink",
+                "Result",
+                "Settings",
+                "The spreadsheet to print the results to",
+            )
 
-        if not 'SkipComputing' in pl:
-            obj.addProperty("App::PropertyBool", "SkipComputing", "Settings",
-                            "When true no calculation of this report is performed, even when the document gets recomputed").SkipComputing = False
+        if not "SkipComputing" in pl:
+            obj.addProperty(
+                "App::PropertyBool",
+                "SkipComputing",
+                "Settings",
+                "When true no calculation of this report is performed, even when the document gets recomputed",
+            ).SkipComputing = False
 
     def onDocumentRestored(self, obj):
         self.setProperties(obj)
@@ -424,7 +498,8 @@ class Report():
 
         if not fp.Result:
             FreeCAD.Console.PrintError(
-                'No spreadsheet attached to %s. Could not recompute result' % (fp.Label))
+                "No spreadsheet attached to %s. Could not recompute result" % (fp.Label)
+            )
 
         spreadsheet = ReportSpreadsheet(fp.Result)
 
@@ -441,7 +516,8 @@ class Report():
             rows = statement.execute()
 
             spreadsheet.printRows(
-                rows, statement.skipRowsAfter, statement.printResultInBold)
+                rows, statement.skipRowsAfter, statement.printResultInBold
+            )
 
         spreadsheet.clearUnusedCells(self.maxColumn, self.maxLine)
 
@@ -454,47 +530,51 @@ class Report():
         try:
             jsonDict = statementsToDict(self.statements)
 
-            json.dump(jsonDict, fileObject, sort_keys=True,
-                      indent=4, ensure_ascii=False)
+            json.dump(
+                jsonDict, fileObject, sort_keys=True, indent=4, ensure_ascii=False
+            )
         finally:
             fileObject.close()
 
     def importJson(self, fileObject):
         try:
-            jsonDict = json.load(fileObject, encoding='utf-8')
+            jsonDict = json.load(fileObject, encoding="utf-8")
 
             self.statements = dictToStatements(jsonDict)
         finally:
             fileObject.close()
 
     def __getstate__(self):
-        state = ['VERSION:1']
+        state = ["VERSION:1"]
 
-        state.append([statement.serializeState()
-                      for statement in self.statements])
+        state.append([statement.serializeState() for statement in self.statements])
         state.append(self.maxColumn)
         state.append(self.maxLine)
 
         return state
 
     def __setstate__(self, state):
-        if state[0] == 'VERSION:1':
+        if state[0] == "VERSION:1":
             savedStatements = state[1]
             self.maxColumn = state[2]
             self.maxLine = state[3]
 
-            self.statements = [ReportStatement.deserializeState(
-                serializedState) for serializedState in savedStatements]
+            self.statements = [
+                ReportStatement.deserializeState(serializedState)
+                for serializedState in savedStatements
+            ]
         else:
-            self.statements = [ReportStatement.deserializeState(
-                serializedState) for serializedState in state]
+            self.statements = [
+                ReportStatement.deserializeState(serializedState)
+                for serializedState in state
+            ]
             self.maxColumn = None
             self.maxLine = None
 
         return None
 
 
-class ViewProviderReport():
+class ViewProviderReport:
     def __init__(self, vobj):
         vobj.Proxy = self
 
@@ -505,25 +585,34 @@ class ViewProviderReport():
 
         self.coinNode = coin.SoGroup()
         vobj.addDisplayMode(self.coinNode, "Standard")
+        return
 
     def onChanged(self, vp, prop):
-        pass
+        return
 
     def doubleClicked(self, vobj):
-        return self.setEdit(vobj, 0)
+        doc = FreeCADGui.getDocument(vobj.Object.Document)
+        if doc.getInEdit():
+            FreeCAD.Console.PrintError("Task dialog already active\n")
+        else:
+            self.setEdit(vobj, 0)
+        # return self.setEdit(vobj, 0)
+        return True
 
     def setEdit(self, vobj, mode):
         if mode == 0:
             panel = ReportConfigPanel(self.report, self.Object)
             FreeCADGui.Control.showDialog(panel)
-
             return True
-
         return False
 
     def unsetEdit(self, vobj, mode):
-        # FreeCADGui.Control.closeDialog()
+        if panel:
+            panel.closing()
+            panel = None
+        FreeCADGui.Control.closeDialog()
         return False
+        # return False
 
     def getIcon(self):
         return iconPath("Workbench.svg")
@@ -546,12 +635,18 @@ class ViewProviderReport():
     def __setstate__(self, state):
         return None
 
+    # dumps and loads replace __getstate__ and __setstate__ post v. 0.21.2
+    def dumps(self):
+        return None
+
+    def loads(self, state):
+        return None
+
 
 def createReport(fileObject=None):
     import Spreadsheet
 
-    reportObject = FreeCAD.ActiveDocument.addObject(
-        "App::FeaturePython", "Report")
+    reportObject = FreeCAD.ActiveDocument.addObject("App::FeaturePython", "Report")
     report = Report(reportObject)
 
     if fileObject is not None:
@@ -565,6 +660,6 @@ def createReport(fileObject=None):
 
 if __name__ == "__main__":
     if FreeCAD.ActiveDocument is None:
-        print('Create a document to continue.')
+        print("Create a document to continue.")
     else:
         createReport()
