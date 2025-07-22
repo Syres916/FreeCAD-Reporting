@@ -487,10 +487,12 @@ class Report:
                 "SkipComputing",
                 "Settings",
                 "When true no calculation of this report is performed, even when the document gets recomputed",
+                hidden=True,
             ).SkipComputing = False
 
     def onDocumentRestored(self, obj):
         self.setProperties(obj)
+        self.SkipComputing = True
 
     def execute(self, fp):
         if fp.SkipComputing:
@@ -525,6 +527,7 @@ class Report:
         self.maxLine = spreadsheet.lineNumber
 
         spreadsheet.recompute()
+        fp.SkipComputing = True
 
     def exportJson(self, fileObject):
         try:
