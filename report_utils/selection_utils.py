@@ -10,10 +10,10 @@ def findSelectedReportConfig():
 
     selectedObject = selection[0]
 
-    if not hasattr(selectedObject, 'Proxy') or selectedObject.Proxy is None:
+    if not hasattr(selectedObject, "Proxy") or selectedObject.Proxy is None:
         return None
 
-    if not hasattr(selectedObject.Proxy, 'statements'):
+    if not hasattr(selectedObject.Proxy, "statements"):
         return None
 
     return selection[0].Proxy

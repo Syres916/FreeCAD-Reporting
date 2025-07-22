@@ -8,23 +8,23 @@ from report_utils import qtutils
 
 
 class ImportReportConfigCommand:
-    toolbarName = 'Reporting_Tools'
-    commandName = 'Import_Report'
+    toolbarName = "Reporting_Tools"
+    commandName = "Import_Report"
 
     def GetResources(self):
-        return {'MenuText': "Import Report",
-                'ToolTip': "Import a new Report object from a JSOn File",
-                'Pixmap': iconPath('ImportConfig.svg')
-                }
+        return {
+            "MenuText": "Import Report",
+            "ToolTip": "Import a new Report object from a JSOn File",
+            "Pixmap": iconPath("ImportConfig.svg"),
+        }
 
     def Activated(self):
-        selectedFile = qtutils.userSelectedFile(
-            'Config File', qtutils.JSON_FILES)
+        selectedFile = qtutils.userSelectedFile("Config File", qtutils.JSON_FILES)
 
         if selectedFile is None:
             return
 
-        fileObject = open(selectedFile, 'r')
+        fileObject = open(selectedFile, "r")
 
         report.createReport(fileObject)
 
@@ -42,5 +42,5 @@ if __name__ == "__main__":
         qtutils.showInfo("No open Document", "There is no open document")
 else:
     import reporting_toolbars
-    reporting_toolbars.toolbarManager.registerCommand(
-        ImportReportConfigCommand())
+
+    reporting_toolbars.toolbarManager.registerCommand(ImportReportConfigCommand())

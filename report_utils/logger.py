@@ -6,7 +6,7 @@ def debug(messagePattern, args=None, compact=True):
         return
 
     if not compact:
-        print('\n')
+        print("\n")
 
     if args is None:
         print(messagePattern)

@@ -7,31 +7,35 @@ from report_utils import qtutils
 
 
 class ExportReportConfigCommand:
-    toolbarName = 'Reporting_Tools'
-    commandName = 'Export_Report'
+    toolbarName = "Reporting_Tools"
+    commandName = "Export_Report"
 
     def GetResources(self):
-        return {'MenuText': "Export Report",
-                'ToolTip': "Exports the configuration stored inside the Report object to a JSON file",
-                'Pixmap': iconPath('ExportConfig.svg')
-                }
+        return {
+            "MenuText": "Export Report",
+            "ToolTip": "Exports the configuration stored inside the Report object to a JSON file",
+            "Pixmap": iconPath("ExportConfig.svg"),
+        }
 
     def Activated(self):
         reportConfig = findSelectedReportConfig()
 
         if reportConfig is None:
             qtutils.showInfo(
-                "No Report selected", "Select exactly one Report object to export its content")
+                "No Report selected",
+                "Select exactly one Report object to export its content",
+            )
 
             return
 
         selectedFile = qtutils.userSelectedFile(
-            'Export Location', qtutils.JSON_FILES, False)
+            "Export Location", qtutils.JSON_FILES, False
+        )
 
         if selectedFile is None:
             return
 
-        fileObject = open(selectedFile, 'w')
+        fileObject = open(selectedFile, "w")
 
         reportConfig.exportJson(fileObject)
 
@@ -49,5 +53,5 @@ if __name__ == "__main__":
         qtutils.showInfo("No open Document", "There is no open document")
 else:
     import reporting_toolbars
-    reporting_toolbars.toolbarManager.registerCommand(
-        ExportReportConfigCommand())
+
+    reporting_toolbars.toolbarManager.registerCommand(ExportReportConfigCommand())

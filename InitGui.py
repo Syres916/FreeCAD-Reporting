@@ -2,7 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 
-class ReportingWorkbench (FreeCADGui.Workbench):
+class ReportingWorkbench(FreeCADGui.Workbench):
     "SQL Like Reporting for FreeCAD"
 
     MenuText = "Reporting"
@@ -10,6 +10,7 @@ class ReportingWorkbench (FreeCADGui.Workbench):
 
     def __init__(self):
         from report_utils.resource_utils import iconPath
+
         self.__class__.Icon = iconPath("Workbench.svg")
 
     def Initialize(self):
@@ -17,8 +18,8 @@ class ReportingWorkbench (FreeCADGui.Workbench):
         import reporting_toolbars
 
         for name, commands in reporting_toolbars.toolbarManager.Toolbars.items():
-            self.appendToolbar(
-                name, [command.commandName for command in commands])
+            self.appendToolbar(name, [command.commandName for command in commands])
+
 
 #    def Activated(self):
 

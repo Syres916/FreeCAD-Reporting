@@ -7,15 +7,15 @@ from report_utils import logger
 TYPE_REGEX = re.compile("<class '([^']+)'>")
 
 
-def printElements(elements, intent=''):
+def printElements(elements, intent=""):
     for element in elements:
-        if(hasattr(element, 'text')):
+        if hasattr(element, "text"):
             print('%s{"%s" (%s)}' % (intent, element.text, element))
         else:
-            print('%s{%s}' % (intent, element))
+            print("%s{%s}" % (intent, element))
 
-        if(hasattr(element, 'elements')):
-            printElements(element.elements, intent + '  ')
+        if hasattr(element, "elements"):
+            printElements(element.elements, intent + "  ")
 
 
 class SqlStatementValidationError(Exception):
@@ -34,10 +34,10 @@ class SelectStatement(object):
 
     def validate(self):
         if self.columns is None:
-            raise SqlStatementValidationError('No columns defined')
+            raise SqlStatementValidationError("No columns defined")
 
         if self.fromClause is None:
-            raise SqlStatementValidationError('No fromClause defined')
+            raise SqlStatementValidationError("No fromClause defined")
 
         if self.groupByClause is not None:
             self.groupByClause.validate()
@@ -64,7 +64,8 @@ class SelectStatement(object):
 
     def getObjectList(self):
         objectList = self.fromClause.getObjects(
-            self.documentObjectsSupplier, self.singleObjectSupplier)
+            self.documentObjectsSupplier, self.singleObjectSupplier
+        )
 
         if self.whereClause is None:
             return objectList
@@ -78,7 +79,7 @@ class SelectStatement(object):
             self.groupByClause.resetState()
 
     def __str__(self):
-        return 'Select %s %s %s' % (self.columns, self.fromClause, self.whereClause)
+        return "Select %s %s %s" % (self.columns, self.fromClause, self.whereClause)
 
 
 class Columns(object):
@@ -94,13 +95,13 @@ class Columns(object):
 
     def validateGrouping(self, groupByColumns):
         # All non grouping columns must also be in the group by clause
-        nonGroupingColumns = [
-            column for column in self.columns if not column.grouping]
+        nonGroupingColumns = [column for column in self.columns if not column.grouping]
 
         for column in nonGroupingColumns:
             if not column in groupByColumns:
                 raise SqlStatementValidationError(
-                    'Only columns from the group by clause are allowed in the select clause')
+                    "Only columns from the group by clause are allowed in the select clause"
+                )
 
     def validateNonGrouping(self):
         groupingFound = False
@@ -114,7 +115,8 @@ class Columns(object):
 
         if groupingFound and nonGroupingFound:
             raise SqlStatementValidationError(
-                'Can not mix functions and non functions in select clause')
+                "Can not mix functions and non functions in select clause"
+            )
 
     def execute(self, objectList):
         result = []
@@ -161,7 +163,7 @@ class Columns(object):
                 column.resetState()
 
     def __str__(self):
-        return '%s' % [column.__str__() for column in self.columns]
+        return "%s" % [column.__str__() for column in self.columns]
 
 
 class Column(object):
@@ -179,7 +181,7 @@ class Column(object):
             self.dataExtractor.resetState()
 
     def __str__(self):
-        return '%s:%s' % (self.columnName, self.dataExtractor)
+        return "%s:%s" % (self.columnName, self.dataExtractor)
 
     def __eq__(self, obj):
         if not isinstance(obj, Column):
@@ -191,7 +193,7 @@ class Column(object):
 class GroupedLists(object):
     def __init__(self):
         self.groups = [
-            #(key, list),...
+            # (key, list),...
         ]
 
     def append(self, key, o):
@@ -214,7 +216,7 @@ class GroupedLists(object):
             key = group[0]
             value = group[1]
 
-            logger.debug('Group %s:%s', (key, value), compact=False)
+            logger.debug("Group %s:%s", (key, value), compact=False)
             groupedList.append(value)
 
         return groupedList
@@ -228,11 +230,11 @@ class GroupByClause(object):
         for column in self.columns:
             if column.grouping:
                 raise SqlStatementValidationError(
-                    'Can not use functions in group by clause')
+                    "Can not use functions in group by clause"
+                )
 
             if isinstance(column.dataExtractor, IdentityExtractor):
-                raise SqlStatementValidationError(
-                    'Can not use * in group by clause')
+                raise SqlStatementValidationError("Can not use * in group by clause")
 
     def execute(self, objectList):
         groups = GroupedLists()
@@ -252,7 +254,7 @@ class GroupByClause(object):
         pass
 
     def __str__(self):
-        return '%s' % [column.__str__() for column in self.columns]
+        return "%s" % [column.__str__() for column in self.columns]
 
 
 class FromClause(object):
@@ -262,19 +264,19 @@ class FromClause(object):
     def getObjects(self, documentObjectsSupplier, singleObjectSupplier):
         referenceValue = self.reference.value
 
-        if(referenceValue == 'document'):
+        if referenceValue == "document":
             return documentObjectsSupplier()
         else:
             return singleObjectSupplier(referenceValue)
 
     def __str__(self):
-        return 'From %s' % self.reference
+        return "From %s" % self.reference
 
 
 class WhereClause(object):
     def __init__(self, booleanExpression):
         if booleanExpression is None:
-            raise ValueError('BooleanExpression must not be None')
+            raise ValueError("BooleanExpression must not be None")
 
         self.booleanExpression = booleanExpression
 
@@ -282,7 +284,7 @@ class WhereClause(object):
         return self.booleanExpression.execute(o)
 
     def __str__(self):
-        return 'Where %s' % (self.booleanExpression)
+        return "Where %s" % (self.booleanExpression)
 
 
 class AsClause(object):
@@ -298,7 +300,7 @@ class IdentityExtractor(object):
         pass
 
     def __str__(self):
-        return '$identity'
+        return "$identity"
 
     def __eq__(self, obj):
         return isinstance(obj, IdentityExtractor)
@@ -312,7 +314,7 @@ class NoneExtractor(object):
         pass
 
     def __str__(self):
-        return 'NULL'
+        return "NULL"
 
     def __eq__(self, obj):
         return isinstance(obj, NoneExtractor)
@@ -332,7 +334,7 @@ class StaticExtractor(object):
         if isinstance(self.value, str):
             return "'%s'" % (self.value)
         else:
-            return '%s' % (self.value)
+            return "%s" % (self.value)
 
     def __eq__(self, obj):
         return isinstance(obj, StaticExtractor)
@@ -369,10 +371,13 @@ class CalculationExtractor(object):
         self.currentValue = None
 
     def __str__(self):
-        return '%s' % (self.calculation)
+        return "%s" % (self.calculation)
 
     def __eq__(self, obj):
-        return isinstance(obj, CalculationExtractor) and self.calculation == obj.calculation
+        return (
+            isinstance(obj, CalculationExtractor)
+            and self.calculation == obj.calculation
+        )
 
 
 class ArithmeticExtractor(object):
@@ -386,16 +391,19 @@ class ArithmeticExtractor(object):
         pass
 
     def __str__(self):
-        return '%s' % (self.arithmeticOperation)
+        return "%s" % (self.arithmeticOperation)
 
     def __eq__(self, obj):
-        return isinstance(obj, ArithmeticExtractor) and self.arithmeticOperation == obj.arithmeticOperation
+        return (
+            isinstance(obj, ArithmeticExtractor)
+            and self.arithmeticOperation == obj.arithmeticOperation
+        )
 
 
 class Reference(object):
     def __init__(self, value):
         self.value = value
-        self.properties = value.split('.')
+        self.properties = value.split(".")
 
     def getValue(self, o):
         actualValue = o
@@ -409,7 +417,7 @@ class Reference(object):
         return actualValue
 
     def __str__(self):
-        return '$%s' % self.value
+        return "$%s" % self.value
 
     def __eq__(self, obj):
         return isinstance(obj, Reference) and self.value == obj.value
@@ -419,12 +427,13 @@ class Asterisk(object):
     def __init__(self):
         pass
 
+
 # Boolean Start
 
 
 class BooleanExpression(object):
     def execute(self, o):
-        raise NotImplementedError('Subclasses must override this method')
+        raise NotImplementedError("Subclasses must override this method")
 
 
 class SimpleBooleanExpression(BooleanExpression):
@@ -440,7 +449,11 @@ class SimpleBooleanExpression(BooleanExpression):
         return self.booleanOperator.compare(left, right)
 
     def __str__(self):
-        return '(%s %s %s)' % (self.leftExpression, self.booleanOperator, self.rightExpression)
+        return "(%s %s %s)" % (
+            self.leftExpression,
+            self.booleanOperator,
+            self.rightExpression,
+        )
 
 
 class BooleanComparison(BooleanExpression):
@@ -456,7 +469,11 @@ class BooleanComparison(BooleanExpression):
         return self.comparisonOperator.compare(left, right)
 
     def __str__(self):
-        return '(%s %s %s)' % (self.leftDataExtractor, self.comparisonOperator, self.rightDataExtractor)
+        return "(%s %s %s)" % (
+            self.leftDataExtractor,
+            self.comparisonOperator,
+            self.rightDataExtractor,
+        )
 
 
 class ArithmeticOperation(BooleanExpression):
@@ -475,7 +492,11 @@ class ArithmeticOperation(BooleanExpression):
         return self.arithmeticOperator.calculate(left, right)
 
     def __str__(self):
-        return '(%s %s %s)' % (self.leftDataExtractor, self.arithmeticOperator, self.rightDataExtractor)
+        return "(%s %s %s)" % (
+            self.leftDataExtractor,
+            self.arithmeticOperator,
+            self.rightDataExtractor,
+        )
 
     def __eq__(self, obj):
         if not isinstance(obj, ArithmeticOperation):
@@ -495,7 +516,7 @@ class MultiplyArithmeticOperator(object):
         return left * right
 
     def __str__(self):
-        return '*'
+        return "*"
 
     def __eq__(self, obj):
         return isinstance(obj, MultiplyArithmeticOperator)
@@ -506,7 +527,7 @@ class DivideArithmeticOperator(object):
         return left / right
 
     def __str__(self):
-        return '/'
+        return "/"
 
     def __eq__(self, obj):
         return isinstance(obj, DivideArithmeticOperator)
@@ -517,7 +538,7 @@ class AddArithmeticOperator(object):
         return left + right
 
     def __str__(self):
-        return '+'
+        return "+"
 
     def __eq__(self, obj):
         return isinstance(obj, AddArithmeticOperator)
@@ -528,7 +549,7 @@ class SubtractArithmeticOperator(object):
         return left - right
 
     def __str__(self):
-        return '-'
+        return "-"
 
     def __eq__(self, obj):
         return isinstance(obj, SubtractArithmeticOperator)
@@ -539,7 +560,7 @@ class GreaterThanOrEqualsComparisonOperator(object):
         return left >= right
 
     def __str__(self):
-        return '>='
+        return ">="
 
 
 class LessThanOrEqualsComparisonOperator(object):
@@ -547,7 +568,7 @@ class LessThanOrEqualsComparisonOperator(object):
         return left <= right
 
     def __str__(self):
-        return '<='
+        return "<="
 
 
 class NotEqualsComparisonOperator(object):
@@ -555,7 +576,7 @@ class NotEqualsComparisonOperator(object):
         return left != right
 
     def __str__(self):
-        return '!='
+        return "!="
 
 
 class EqualsComparisonOperator(object):
@@ -563,7 +584,7 @@ class EqualsComparisonOperator(object):
         return left == right
 
     def __str__(self):
-        return '='
+        return "="
 
 
 class GreaterThanComparisonOperator(object):
@@ -571,7 +592,7 @@ class GreaterThanComparisonOperator(object):
         return left > right
 
     def __str__(self):
-        return '>'
+        return ">"
 
 
 class LessThanComparisonOperator(object):
@@ -579,7 +600,7 @@ class LessThanComparisonOperator(object):
         return left < right
 
     def __str__(self):
-        return '<'
+        return "<"
 
 
 class IsComparisonOperator(object):
@@ -593,7 +614,7 @@ class IsComparisonOperator(object):
         return False
 
     def __str__(self):
-        return 'IS'
+        return "IS"
 
 
 class IsNotComparisonOperator(object):
@@ -607,21 +628,22 @@ class IsNotComparisonOperator(object):
         return True
 
     def __str__(self):
-        return 'IS NOT'
+        return "IS NOT"
+
 
 class LikeComparisonOperator(object):
     def compare(self, left, right):
         if left is None or right is None:
             return False
 
-        pattern = str(right).replace('%', '.*').replace('?', '.')
+        pattern = str(right).replace("%", ".*").replace("?", ".")
         regex = re.compile(pattern)
         value = str(left)
 
         return regex.match(value) is not None
 
     def __str__(self):
-        return 'LIKE'
+        return "LIKE"
 
 
 class AndBooleanOperator(object):
@@ -629,7 +651,7 @@ class AndBooleanOperator(object):
         return left and right
 
     def __str__(self):
-        return 'AND'
+        return "AND"
 
 
 class OrBooleanOperator(object):
@@ -637,7 +659,9 @@ class OrBooleanOperator(object):
         return left or right
 
     def __str__(self):
-        return 'OR'
+        return "OR"
+
+
 # Boolean end
 
 # Functions Start
@@ -661,7 +685,7 @@ class SumFunctionOperator(FunctionOperator):
         return left + right
 
     def __str__(self):
-        return 'SUM'
+        return "SUM"
 
     def __eq__(self, obj):
         return isinstance(obj, SumFunctionOperator)
@@ -681,7 +705,7 @@ class CountFunctionOperator(FunctionOperator):
         return left + 1
 
     def __str__(self):
-        return 'COUNT'
+        return "COUNT"
 
     def __eq__(self, obj):
         return isinstance(obj, CountFunctionOperator)
@@ -704,7 +728,7 @@ class MinFunctionOperator(FunctionOperator):
             return right
 
     def __str__(self):
-        return 'MIN'
+        return "MIN"
 
     def __eq__(self, obj):
         return isinstance(obj, MinFunctionOperator)
@@ -727,7 +751,7 @@ class MaxFunctionOperator(FunctionOperator):
             return right
 
     def __str__(self):
-        return 'MAX'
+        return "MAX"
 
     def __eq__(self, obj):
         return isinstance(obj, MaxFunctionOperator)
@@ -739,9 +763,9 @@ class ConcatFunctionOperator(FunctionOperator):
 
     def execute(self, left, rightValues):
         if rightValues is None or len(rightValues) == 0:
-            return ''
+            return ""
 
-        result = ''
+        result = ""
 
         for value in rightValues:
             if value is not None:
@@ -750,7 +774,7 @@ class ConcatFunctionOperator(FunctionOperator):
         return result
 
     def __str__(self):
-        return 'CONCAT'
+        return "CONCAT"
 
     def __eq__(self, obj):
         return isinstance(obj, ConcatFunctionOperator)
@@ -763,7 +787,7 @@ class TypeFunctionOperator(FunctionOperator):
     def execute(self, left, right):
         toUse = right
 
-        if hasattr(right, 'Proxy'):
+        if hasattr(right, "Proxy"):
             toUse = right.Proxy
 
         typeString = str(type(toUse))
@@ -773,10 +797,11 @@ class TypeFunctionOperator(FunctionOperator):
         return match.group(1)
 
     def __str__(self):
-        return 'TYPE'
+        return "TYPE"
 
     def __eq__(self, obj):
         return isinstance(obj, TypeFunctionOperator)
+
 
 class LowerFunctionOperator(FunctionOperator):
     def __init__(self):
@@ -785,16 +810,17 @@ class LowerFunctionOperator(FunctionOperator):
     def execute(self, left, right):
         if right is None:
             return None
-        
+
         text = str(right)
 
         return text.lower()
 
     def __str__(self):
-        return 'LOWER'
+        return "LOWER"
 
     def __eq__(self, obj):
         return isinstance(obj, LowerFunctionOperator)
+
 
 class UpperFunctionOperator(FunctionOperator):
     def __init__(self):
@@ -803,16 +829,17 @@ class UpperFunctionOperator(FunctionOperator):
     def execute(self, left, right):
         if right is None:
             return None
-        
+
         text = str(right)
 
         return text.upper()
 
     def __str__(self):
-        return 'LOWER'
+        return "LOWER"
 
     def __eq__(self, obj):
         return isinstance(obj, LowerFunctionOperator)
+
 
 class Calculation(object):
     def __init__(self, operator, dataExtractor, name):
@@ -827,10 +854,14 @@ class Calculation(object):
         return self.operator.execute(currentValue, value)
 
     def __str__(self):
-        return '%s(%s)' % (self.operator, self.dataExtractor)
+        return "%s(%s)" % (self.operator, self.dataExtractor)
 
     def __eq__(self, obj):
-        return isinstance(obj, Calculation) and self.operator == obj.operator and self.dataExtractor == obj.dataExtractor
+        return (
+            isinstance(obj, Calculation)
+            and self.operator == obj.operator
+            and self.dataExtractor == obj.dataExtractor
+        )
 
 
 class MultiParamCalculation(object):
@@ -841,16 +872,21 @@ class MultiParamCalculation(object):
         self.grouping = operator.grouping
 
     def execute(self, o, currentValue):
-        values = [dataExtractor.extract(o)
-                  for dataExtractor in self.dataExtractors]
+        values = [dataExtractor.extract(o) for dataExtractor in self.dataExtractors]
 
         return self.operator.execute(currentValue, values)
 
     def __str__(self):
-        return '%s(%s)' % (self.operator, [str(extractor) for extractor in self.dataExtractors])
+        return "%s(%s)" % (
+            self.operator,
+            [str(extractor) for extractor in self.dataExtractors],
+        )
 
     def __eq__(self, obj):
-        if not isinstance(obj, MultiParamCalculation) or not self.operator == obj.operator:
+        if (
+            not isinstance(obj, MultiParamCalculation)
+            or not self.operator == obj.operator
+        ):
             return False
 
         for dataExtractor in self.dataExtractors:
@@ -858,6 +894,7 @@ class MultiParamCalculation(object):
                 return False
 
         return True
+
 
 # Functions End
 
@@ -882,10 +919,10 @@ def findFunctionOperator(elements):
 
 def findExtractor(element):
     if element is None:
-        return (NoneExtractor(), 'Null', False)
+        return (NoneExtractor(), "Null", False)
 
     if isinstance(element, Asterisk):
-        return (IdentityExtractor(), '*', False)
+        return (IdentityExtractor(), "*", False)
 
     if isinstance(element, int) or isinstance(element, str):
         return (StaticExtractor(element), str(element), False)
@@ -910,7 +947,7 @@ def findExtractors(elements):
 
         if extractor[0] is not None:
             extractors.append(extractor)
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             extractors.extend(findExtractors(element.elements))
 
     return extractors
@@ -922,7 +959,7 @@ def findColumns(elements):
     for element in elements:
         if isinstance(element, Column):
             columns.append(element)
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             columns.extend(findColumns(element.elements))
 
     return columns
@@ -932,7 +969,7 @@ def findLiteral(elements):
     for element in elements:
         if isinstance(element, str):
             return element
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             literal = findLiteral(element.elements)
 
             if literal is not None:
@@ -949,7 +986,7 @@ def extractGroupByColumns(elements):
 
         if extractor is not None:
             columns.append(Column(name, extractor, grouping))
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             columns.extend(extractGroupByColumns(element.elements))
 
     return columns
@@ -959,7 +996,7 @@ def findAsClause(elements):
     for element in elements:
         if isinstance(element, AsClause):
             return element
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             asClause = findAsClause(element.elements)
 
             if asClause is not None:
@@ -978,7 +1015,7 @@ def extractColumn(elements):
             column = Column(name, extractor, grouping)
 
             break
-        elif hasattr(element, 'elements'):
+        elif hasattr(element, "elements"):
             column = findColumns(element.elements)
 
             if column is not None:
@@ -1052,7 +1089,8 @@ class ParserActions(object):
         rightDataExtractor = findExtractor(elements[4])
 
         comparison = BooleanComparison(
-            leftDataExctractor[0], rightDataExtractor[0], comparisonOperator)
+            leftDataExctractor[0], rightDataExtractor[0], comparisonOperator
+        )
 
         return comparison
 
@@ -1061,7 +1099,8 @@ class ParserActions(object):
         booleanOperator = elements[2]
         rightExpression = elements[4]
         expression = SimpleBooleanExpression(
-            leftExpression, rightExpression, booleanOperator)
+            leftExpression, rightExpression, booleanOperator
+        )
 
         return expression
 
@@ -1070,7 +1109,7 @@ class ParserActions(object):
         lastElement = elements[-1]
 
         # No additional expression found
-        if lastElement.text == '':
+        if lastElement.text == "":
             return firstExpression
 
         # Otherwise build a expression from the first expression and the additional expression
@@ -1080,7 +1119,8 @@ class ParserActions(object):
         rightExpression = additionalExpressionElements[3]
 
         expression = SimpleBooleanExpression(
-            firstExpression, rightExpression, booleanOperator)
+            firstExpression, rightExpression, booleanOperator
+        )
 
         return expression
 
@@ -1090,7 +1130,8 @@ class ParserActions(object):
         rightDataExtractor = findExtractor(elements[4])
 
         operation = ArithmeticOperation(
-            leftDataExctractor[0], rightDataExtractor[0], arithmeticOperator)
+            leftDataExctractor[0], rightDataExtractor[0], arithmeticOperator
+        )
 
         return operation
 
@@ -1116,7 +1157,7 @@ class ParserActions(object):
         return None
 
     def make_literal(self, input, start, end, elements):
-        return input[start + 1:end - 1]
+        return input[start + 1 : end - 1]
 
     def make_comp_operator_gte(self, input, start, end):
         return GreaterThanOrEqualsComparisonOperator()
@@ -1168,7 +1209,7 @@ class ParserActions(object):
 
     def make_type_operator(self, input, start, end):
         return TypeFunctionOperator()
-    
+
     def make_lower_operator(self, input, start, end):
         return LowerFunctionOperator()
 
@@ -1189,16 +1230,18 @@ class ParserActions(object):
 
         extractors = findExtractors(elements)
 
-        return MultiParamCalculation(operator, [extractor[0] for extractor in extractors], input[start:end])
+        return MultiParamCalculation(
+            operator, [extractor[0] for extractor in extractors], input[start:end]
+        )
 
 
 class SqlParser(object):
     def __init__(self, documentObjectsSupplier, singleObjectSupplier):
         if documentObjectsSupplier is None:
-            raise AssertionError('documentObjectsSupplier must not be none')
+            raise AssertionError("documentObjectsSupplier must not be none")
 
         if singleObjectSupplier is None:
-            raise AssertionError('singleObjectSupplier must not be none')
+            raise AssertionError("singleObjectSupplier must not be none")
 
         self.documentObjectsSupplier = documentObjectsSupplier
         self.singleObjectSupplier = singleObjectSupplier
