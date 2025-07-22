@@ -1,6 +1,7 @@
-from PySide2 import QtGui, QtCore, QtWidgets
+from PySide import QtGui, QtCore, QtWidgets
 
 JSON_FILES = "JSON Files (*.json)"
+
 
 def activeWindow():
     return QtWidgets.QApplication.activeWindow()
@@ -13,12 +14,14 @@ def showInfo(title, message):
 def userSelectedFile(title, filePattern, mustExist=True):
     if mustExist:
         fileName = QtWidgets.QFileDialog.getOpenFileName(
-            activeWindow(), title, '', filePattern)[0]
+            activeWindow(), title, "", filePattern
+        )[0]
     else:
         fileName = QtWidgets.QFileDialog.getSaveFileName(
-            activeWindow(), caption=title, filter=filePattern)[0]
+            activeWindow(), caption=title, filter=filePattern
+        )[0]
 
-    if fileName == '':
+    if fileName == "":
         return None
 
     return fileName
